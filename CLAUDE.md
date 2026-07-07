@@ -1,0 +1,36 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+Arkanoid/Breakout clone built with plain HTML, CSS and JavaScript — zero dependencies (no build tool, no bundler, no package manager, no test framework). The game itself has not been implemented yet; the repository currently only contains assets and the spec-driven workflow described below. There is no `index.html` or game source yet — the first spec/implementation will need to create the project's basic structure.
+
+Because there is no build step, "running" the game will simply mean opening the resulting HTML file in a browser (or serving the folder statically) once it exists.
+
+## Repository is not yet a git repo
+
+`git status` currently fails with "not a git repository". The `/spec-impl` workflow (see below) expects to create branches, so a `git init` will be needed before that workflow can create branches — do not silently `git init` on the user's behalf without asking first.
+
+## Spec-driven workflow
+
+This repo uses two custom skills (installed under `.claude/skills/` and mirrored in `.agents/skills/`, tracked via `skills-lock.json` pointing at `Klerith/fernando-skills`) to drive feature work:
+
+- **`/spec <feature>`** — guided spec designer. Clarifies requirements through Q&A, then writes the spec section by section into `specs/NN-slug.md` (created fresh; the `specs/` directory doesn't exist yet). New specs are saved in `Draft` state and must be manually flipped to `Approved` by a human before implementation.
+- **`/spec-impl <NN-spec-name>`** — implements an approved spec. Refuses to proceed unless the target spec's status means "Approved" (in any language). On success it creates/switches to a branch named `spec-NN-slug`, echoes the spec's objective/scope/plan/acceptance criteria, then implements the plan one step at a time, pausing for review after each step.
+- Branch auto-creation is controlled by `specs/.spec-config.yml` (`AutoCreateBranch: true` by default); `/spec` seeds this file with defaults the first time it creates a spec, and never overwrites it afterward.
+
+When asked to plan or build a feature for this game, prefer this existing `/spec` → (human approval) → `/spec-impl` flow over ad hoc planning.
+
+## Game assets already available
+
+- `assets/spritesheet-breakout.png` — sprite sheet image.
+- `assets/spritesheet.js` — plain browser script (no module system) exposing:
+  - `SPRITES` — pixel coordinates/sizes for `paddle`, `ball`, and `blocks.<color>` (gray/red/yellow/cyan/magenta/hotpink/green).
+  - `EXPLOSION_FRAMES` — 4-frame explosion animation per block color, plus `EXPLOSION_DURATION` (ms per frame, 150).
+  - `loadSpritesheet(cb)` — loads the PNG onto an offscreen canvas once and invokes queued callbacks; safe to call multiple times before load completes.
+  - `drawSprite(ctx, name, x, y, w, h)` — draws a sprite by name onto a canvas context; block sprites are addressed as `block_<color>` (e.g. `block_red`).
+  - `drawFrame(ctx, frame, x, y, w, h)` — draws a single explosion animation frame object (`{sx, sy, sw, sh}`).
+- `assets/sounds/ball-bounce.mp3`, `assets/sounds/break-sound.mp3` — sound effects for ball/paddle bounce and block break.
+
+Future game code should load and use these existing assets/helpers rather than introducing new sprite or sound-loading systems.

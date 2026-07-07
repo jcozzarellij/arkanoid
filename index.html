@@ -6,7 +6,19 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <canvas id="game" width="800" height="600"></canvas>
+  <div id="game-container">
+    <canvas id="game" width="800" height="600"></canvas>
+
+    <div id="overlay-victory" class="overlay hidden">
+      <h1>Victoria</h1>
+      <button class="btn-retry" data-overlay="victory">Reintentar</button>
+    </div>
+
+    <div id="overlay-gameover" class="overlay hidden">
+      <h1>Game Over</h1>
+      <button class="btn-retry" data-overlay="gameover">Reintentar</button>
+    </div>
+  </div>
 
   <script src="assets/spritesheet.js"></script>
   <script src="game.js"></script>

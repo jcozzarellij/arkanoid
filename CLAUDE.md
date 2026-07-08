@@ -4,23 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Arkanoid/Breakout clone built with plain HTML, CSS and JavaScript — zero dependencies (no build tool, no bundler, no package manager, no test framework). The game itself has not been implemented yet; the repository currently only contains assets and the spec-driven workflow described below. There is no `index.html` or game source yet — the first spec/implementation will need to create the project's basic structure.
+Arkanoid/Breakout clone built with plain HTML, CSS and JavaScript — zero dependencies (no build tool, no bundler, no package manager, no test framework). The game is implemented and playable: open `index.html` directly in a browser (no server or build step required).
 
-Because there is no build step, "running" the game will simply mean opening the resulting HTML file in a browser (or serving the folder statically) once it exists.
+## Architecture
 
-## Repository is not yet a git repo
-
-`git status` currently fails with "not a git repository". The `/spec-impl` workflow (see below) expects to create branches, so a `git init` will be needed before that workflow can create branches — do not silently `git init` on the user's behalf without asking first.
+- `index.html` — canvas, HUD, and all overlay markup (level-complete, game-complete, game-over, pause/level-select); loads the scripts below in order.
+- `levels.js` — hardcoded list of level definitions (block color patterns, ball speed multiplier per level).
+- `game.js` (~390 lines) — the entire game: state machine, main loop (`requestAnimationFrame`-driven), paddle/ball physics, collision, block-break explosion animations, sound triggering, HUD/overlay updates.
+- `style.css` — layout and overlay styling.
+- `assets/` — sprite sheet, sprite helpers, and sound effects (see below).
 
 ## Spec-driven workflow
 
 This repo uses two custom skills (installed under `.claude/skills/` and mirrored in `.agents/skills/`, tracked via `skills-lock.json` pointing at `Klerith/fernando-skills`) to drive feature work:
 
-- **`/spec <feature>`** — guided spec designer. Clarifies requirements through Q&A, then writes the spec section by section into `specs/NN-slug.md` (created fresh; the `specs/` directory doesn't exist yet). New specs are saved in `Draft` state and must be manually flipped to `Approved` by a human before implementation.
+- **`/spec <feature>`** — guided spec designer. Clarifies requirements through Q&A, then writes the spec section by section into `specs/NN-slug.md`. New specs are saved in `Draft` state and must be manually flipped to `Approved` (`aprobado`) by a human before implementation.
 - **`/spec-impl <NN-spec-name>`** — implements an approved spec. Refuses to proceed unless the target spec's status means "Approved" (in any language). On success it creates/switches to a branch named `spec-NN-slug`, echoes the spec's objective/scope/plan/acceptance criteria, then implements the plan one step at a time, pausing for review after each step.
 - Branch auto-creation is controlled by `specs/.spec-config.yml` (`AutoCreateBranch: true` by default); `/spec` seeds this file with defaults the first time it creates a spec, and never overwrites it afterward.
 
 When asked to plan or build a feature for this game, prefer this existing `/spec` → (human approval) → `/spec-impl` flow over ad hoc planning.
+
+**Existing specs** (in `specs/`, numbered in implementation order):
+
+1. `01-mvp-arkanoid.md` — single-level MVP: paddle/ball physics, lives, score, win/lose overlays. Status: Implementado.
+2. `02-block-destroy-animation.md` — 4-frame explosion animation on block break, sourced from the spritesheet. Status: Implementado.
+3. `03-sound-and-levels.md` — bounce/break sound effects plus a 3-level progressive system (same grid, new color pattern and +15% ball speed per level) with transition overlays. Status: aprobado in the spec file, but the feature is already implemented on `main` — flag this status/code mismatch to the user rather than silently editing the spec.
 
 ## Game assets already available
 

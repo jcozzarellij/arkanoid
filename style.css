@@ -71,7 +71,10 @@ html, body {
   font-size: 48px;
 }
 
-.btn-retry {
+.btn-retry,
+.btn-next-level,
+.btn-resume,
+.btn-select-level {
   padding: 10px 24px;
   font-size: 18px;
   cursor: pointer;
@@ -81,6 +84,25 @@ html, body {
   color: #fff;
 }
 
-.btn-retry:hover {
+.btn-retry:hover,
+.btn-next-level:hover,
+.btn-resume:hover,
+.btn-select-level:hover {
   background: #43a047;
+}
+
+#level-select {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#level-select p {
+  margin: 0;
+}
+
+#level-select-buttons {
+  display: flex;
+  gap: 8px;
 }

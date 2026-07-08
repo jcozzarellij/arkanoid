@@ -1,6 +1,6 @@
 # SPEC 03 — Efectos de sonido y sistema de niveles progresivo
 
-> **Status:** Draft
+> **Status:** aprobado
 > **Depends on:** SPEC 01, SPEC 02
 > **Date:** 2026-07-07
 > **Objective:** Agregar los sonidos de rebote y rotura de bloques, y un sistema de 3 niveles progresivos (mismo grid con distinto patrón de colores y +15% de velocidad de bola por nivel) que se completan en secuencia con overlays de transición.

@@ -8,6 +8,7 @@
 <body>
   <div id="game-container">
     <div id="hud">
+      <div id="hud-level">Nivel 1/3</div>
       <div id="hud-score">Score: 0</div>
       <div id="hud-lives"></div>
     </div>
@@ -15,19 +16,34 @@
     <div id="canvas-wrap">
       <canvas id="game" width="800" height="600"></canvas>
 
-      <div id="overlay-victory" class="overlay hidden">
-        <h1>Victoria</h1>
-        <button class="btn-retry" data-overlay="victory">Reintentar</button>
+      <div id="overlay-levelcomplete" class="overlay hidden">
+        <h1>¡Nivel completado!</h1>
+        <button class="btn-next-level" data-overlay="levelcomplete">Siguiente nivel</button>
+      </div>
+
+      <div id="overlay-gamecomplete" class="overlay hidden">
+        <h1>¡Juego completado!</h1>
+        <button class="btn-retry" data-overlay="gamecomplete">Reintentar</button>
       </div>
 
       <div id="overlay-gameover" class="overlay hidden">
         <h1>Game Over</h1>
         <button class="btn-retry" data-overlay="gameover">Reintentar</button>
       </div>
+
+      <div id="overlay-pause" class="overlay hidden">
+        <h1>Pausa</h1>
+        <button class="btn-resume">Continuar</button>
+        <div id="level-select">
+          <p>Seleccionar nivel:</p>
+          <div id="level-select-buttons"></div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script src="assets/spritesheet.js"></script>
+  <script src="levels.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

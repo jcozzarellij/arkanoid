@@ -1,8 +1,12 @@
 const canvas = document.getElementById( 'game' );
 const ctx = canvas.getContext( '2d' );
 
-const overlayVictory = document.getElementById( 'overlay-victory' );
+const overlayLevelComplete = document.getElementById( 'overlay-levelcomplete' );
+const overlayGameComplete = document.getElementById( 'overlay-gamecomplete' );
 const overlayGameover = document.getElementById( 'overlay-gameover' );
+const overlayPause = document.getElementById( 'overlay-pause' );
+const levelSelectButtonsEl = document.getElementById( 'level-select-buttons' );
+const hudLevelEl = document.getElementById( 'hud-level' );
 const hudScoreEl = document.getElementById( 'hud-score' );
 const hudLivesEl = document.getElementById( 'hud-lives' );
 
@@ -17,7 +21,17 @@ const MAX_LIVES = 3;
 const PADDLE_KEY_SPEED = 8;
 const BALL_REST_GAP = 14; // distancia entre el centro de la bola y el borde superior de la pala en reposo
 
-function createBlocks() {
+const SOUNDS = {
+  bounce: 'assets/sounds/ball-bounce.mp3',
+  break: 'assets/sounds/break-sound.mp3',
+};
+
+function playSound( name ) {
+  new Audio( SOUNDS[ name ] ).play();
+}
+
+function createBlocks( level ) {
+  const colorFor = LEVELS[ level - 1 ].colorFor;
   const blocks = [];
   for ( let row = 0; row < ROWS; row++ ) {
     for ( let col = 0; col < COLS; col++ ) {
@@ -26,7 +40,7 @@ function createBlocks() {
         y: row * BLOCK_HEIGHT + BLOCK_TOP_OFFSET,
         width: BLOCK_WIDTH,
         height: BLOCK_HEIGHT,
-        color: COLORS[ ( row * COLS + col ) % COLORS.length ],
+        color: colorFor( row, col ),
         alive: true,
       } );
     }
@@ -35,8 +49,12 @@ function createBlocks() {
 }
 
 function createInitialState() {
+  const level = 1;
+  const speed = getBallSpeed( level );
+
   return {
-    screen: 'playing', // 'playing' | 'victory' | 'gameover'
+    screen: 'playing', // 'playing' | 'paused' | 'levelComplete' | 'gameComplete' | 'gameover'
+    level,
     score: 0,
     lives: 3,
     ballLaunched: false,
@@ -47,10 +65,10 @@ function createInitialState() {
 
     ball: {
       x: 400, y: 556, radius: 8,
-      vx: 3, vy: -3,
+      vx: speed, vy: -speed,
     },
 
-    blocks: createBlocks(),
+    blocks: createBlocks( level ),
 
     explosions: [],
   };
@@ -67,8 +85,52 @@ function restBallOnPaddle() {
 
 function resetGame() {
   state = createInitialState();
-  overlayVictory.classList.add( 'hidden' );
+  overlayLevelComplete.classList.add( 'hidden' );
+  overlayGameComplete.classList.add( 'hidden' );
   overlayGameover.classList.add( 'hidden' );
+  overlayPause.classList.add( 'hidden' );
+  updateHud();
+}
+
+function nextLevel() {
+  state.level += 1;
+  state.blocks = createBlocks( state.level );
+  state.explosions = [];
+  state.ballLaunched = false;
+  restBallOnPaddle();
+
+  const speed = getBallSpeed( state.level );
+  state.ball.vx = speed;
+  state.ball.vy = -speed;
+
+  state.screen = 'playing';
+  overlayLevelComplete.classList.add( 'hidden' );
+  updateHud();
+}
+
+function togglePause() {
+  if ( state.screen === 'playing' ) {
+    state.screen = 'paused';
+    overlayPause.classList.remove( 'hidden' );
+  } else if ( state.screen === 'paused' ) {
+    state.screen = 'playing';
+    overlayPause.classList.add( 'hidden' );
+  }
+}
+
+function selectLevel( level ) {
+  state.level = level;
+  state.blocks = createBlocks( level );
+  state.explosions = [];
+  state.ballLaunched = false;
+  restBallOnPaddle();
+
+  const speed = getBallSpeed( level );
+  state.ball.vx = speed;
+  state.ball.vy = -speed;
+
+  state.screen = 'playing';
+  overlayPause.classList.add( 'hidden' );
   updateHud();
 }
 
@@ -84,6 +146,10 @@ window.addEventListener( 'keydown', ( e ) => {
   if ( e.code === 'Space' ) {
     e.preventDefault();
     launchBall();
+  }
+  if ( e.code === 'Escape' ) {
+    e.preventDefault();
+    togglePause();
   }
 } );
 
@@ -106,6 +172,25 @@ canvas.addEventListener( 'click', () => {
 // --- Retry buttons ---
 document.querySelectorAll( '.btn-retry' ).forEach( ( btn ) => {
   btn.addEventListener( 'click', resetGame );
+} );
+
+// --- Next level button ---
+document.querySelectorAll( '.btn-next-level' ).forEach( ( btn ) => {
+  btn.addEventListener( 'click', nextLevel );
+} );
+
+// --- Pause: botón "Continuar" y selección de nivel ---
+document.querySelectorAll( '.btn-resume' ).forEach( ( btn ) => {
+  btn.addEventListener( 'click', togglePause );
+} );
+
+LEVELS.forEach( ( _, index ) => {
+  const level = index + 1;
+  const btn = document.createElement( 'button' );
+  btn.className = 'btn-select-level';
+  btn.textContent = `Nivel ${ level }`;
+  btn.addEventListener( 'click', () => selectLevel( level ) );
+  levelSelectButtonsEl.appendChild( btn );
 } );
 
 function clamp( value, min, max ) {
@@ -133,15 +218,18 @@ function updateBall( timestamp ) {
   if ( ball.x - ball.radius <= 0 ) {
     ball.x = ball.radius;
     ball.vx = Math.abs( ball.vx );
+    playSound( 'bounce' );
   } else if ( ball.x + ball.radius >= canvas.width ) {
     ball.x = canvas.width - ball.radius;
     ball.vx = -Math.abs( ball.vx );
+    playSound( 'bounce' );
   }
 
   // Pared superior
   if ( ball.y - ball.radius <= 0 ) {
     ball.y = ball.radius;
     ball.vy = Math.abs( ball.vy );
+    playSound( 'bounce' );
   }
 
   // Colisión con la pala
@@ -155,6 +243,7 @@ function updateBall( timestamp ) {
   ) {
     ball.vy = -Math.abs( ball.vy );
     ball.y = paddle.y - ball.radius;
+    playSound( 'bounce' );
   }
 
   // Colisión con bloques
@@ -169,6 +258,7 @@ function updateBall( timestamp ) {
     ) {
       block.alive = false;
       state.score += 10;
+      playSound( 'break' );
       state.explosions.push( {
         x: block.x, y: block.y, width: block.width, height: block.height,
         color: block.color, startTime: timestamp,
@@ -194,8 +284,10 @@ function updateBall( timestamp ) {
     state.lives -= 1;
     state.ballLaunched = false;
     restBallOnPaddle();
-    ball.vx = 3;
-    ball.vy = -3;
+
+    const speed = getBallSpeed( state.level );
+    ball.vx = speed;
+    ball.vy = -speed;
 
     if ( state.lives <= 0 ) {
       state.screen = 'gameover';
@@ -219,20 +311,23 @@ function update( timestamp ) {
   updateExplosions( timestamp );
   updateHud();
 
-  // Victoria: sólo si seguimos en 'playing' (evita pisar un Game Over
+  // Fin de nivel: sólo si seguimos en 'playing' (evita pisar un Game Over
   // recién fijado este mismo tick) y ya no quedan explosiones pendientes.
   if ( state.screen === 'playing' && state.blocks.every( ( b ) => !b.alive ) && state.explosions.length === 0 ) {
-    state.screen = 'victory';
+    state.screen = state.level < LEVELS.length ? 'levelComplete' : 'gameComplete';
   }
 
   if ( state.screen === 'gameover' ) {
     overlayGameover.classList.remove( 'hidden' );
-  } else if ( state.screen === 'victory' ) {
-    overlayVictory.classList.remove( 'hidden' );
+  } else if ( state.screen === 'levelComplete' ) {
+    overlayLevelComplete.classList.remove( 'hidden' );
+  } else if ( state.screen === 'gameComplete' ) {
+    overlayGameComplete.classList.remove( 'hidden' );
   }
 }
 
 function updateHud() {
+  hudLevelEl.textContent = `Nivel ${ state.level }/${ LEVELS.length }`;
   hudScoreEl.textContent = `Score: ${ state.score }`;
 
   hudLivesEl.innerHTML = '';

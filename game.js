@@ -51,6 +51,8 @@ function createInitialState() {
     },
 
     blocks: createBlocks(),
+
+    explosions: [],
   };
 }
 
@@ -116,7 +118,7 @@ function updatePaddle() {
   state.paddle.x = clamp( state.paddle.x, 0, canvas.width - state.paddle.width );
 }
 
-function updateBall() {
+function updateBall( timestamp ) {
   const ball = state.ball;
 
   if ( !state.ballLaunched ) {
@@ -167,6 +169,10 @@ function updateBall() {
     ) {
       block.alive = false;
       state.score += 10;
+      state.explosions.push( {
+        x: block.x, y: block.y, width: block.width, height: block.height,
+        color: block.color, startTime: timestamp,
+      } );
 
       const dx = ball.x - ( block.x + block.width / 2 );
       const dy = ball.y - ( block.y + block.height / 2 );
@@ -195,17 +201,29 @@ function updateBall() {
       state.screen = 'gameover';
     }
   }
-
-  // Victoria
-  if ( state.blocks.every( ( b ) => !b.alive ) ) {
-    state.screen = 'victory';
-  }
 }
 
-function update() {
+function getExplosionFrame( explosion, timestamp ) {
+  return Math.floor( ( timestamp - explosion.startTime ) / EXPLOSION_DURATION );
+}
+
+function updateExplosions( timestamp ) {
+  state.explosions = state.explosions.filter( ( explosion ) => {
+    return getExplosionFrame( explosion, timestamp ) < EXPLOSION_FRAMES[ explosion.color ].length;
+  } );
+}
+
+function update( timestamp ) {
   updatePaddle();
-  updateBall();
+  updateBall( timestamp );
+  updateExplosions( timestamp );
   updateHud();
+
+  // Victoria: sólo si seguimos en 'playing' (evita pisar un Game Over
+  // recién fijado este mismo tick) y ya no quedan explosiones pendientes.
+  if ( state.screen === 'playing' && state.blocks.every( ( b ) => !b.alive ) && state.explosions.length === 0 ) {
+    state.screen = 'victory';
+  }
 
   if ( state.screen === 'gameover' ) {
     overlayGameover.classList.remove( 'hidden' );
@@ -243,18 +261,28 @@ function drawBall() {
   drawSprite( ctx, 'ball', ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2 );
 }
 
-function render() {
+function drawExplosions( timestamp ) {
+  for ( const explosion of state.explosions ) {
+    const frame = getExplosionFrame( explosion, timestamp );
+    const frames = EXPLOSION_FRAMES[ explosion.color ];
+    if ( frame >= frames.length ) continue;
+    drawFrame( ctx, frames[ frame ], explosion.x, explosion.y, explosion.width, explosion.height );
+  }
+}
+
+function render( timestamp ) {
   ctx.clearRect( 0, 0, canvas.width, canvas.height );
   drawBlocks();
+  drawExplosions( timestamp );
   drawPaddle();
   drawBall();
 }
 
-function loop() {
+function loop( timestamp ) {
   if ( state.screen === 'playing' ) {
-    update();
+    update( timestamp );
   }
-  render();
+  render( timestamp );
   requestAnimationFrame( loop );
 }
 

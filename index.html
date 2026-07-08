@@ -7,16 +7,23 @@
 </head>
 <body>
   <div id="game-container">
-    <canvas id="game" width="800" height="600"></canvas>
-
-    <div id="overlay-victory" class="overlay hidden">
-      <h1>Victoria</h1>
-      <button class="btn-retry" data-overlay="victory">Reintentar</button>
+    <div id="hud">
+      <div id="hud-score">Score: 0</div>
+      <div id="hud-lives"></div>
     </div>
 
-    <div id="overlay-gameover" class="overlay hidden">
-      <h1>Game Over</h1>
-      <button class="btn-retry" data-overlay="gameover">Reintentar</button>
+    <div id="canvas-wrap">
+      <canvas id="game" width="800" height="600"></canvas>
+
+      <div id="overlay-victory" class="overlay hidden">
+        <h1>Victoria</h1>
+        <button class="btn-retry" data-overlay="victory">Reintentar</button>
+      </div>
+
+      <div id="overlay-gameover" class="overlay hidden">
+        <h1>Game Over</h1>
+        <button class="btn-retry" data-overlay="gameover">Reintentar</button>
+      </div>
     </div>
   </div>
 

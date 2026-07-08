@@ -8,6 +8,37 @@ html, body {
 }
 
 #game-container {
+  display: flex;
+  flex-direction: column;
+  width: 800px;
+  font-family: sans-serif;
+}
+
+#hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px;
+  color: #fff;
+  font-size: 20px;
+}
+
+#hud-lives {
+  display: flex;
+  gap: 6px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+#hud-lives .heart {
+  color: #e74c3c;
+}
+
+#hud-lives .heart.empty {
+  color: #444;
+}
+
+#canvas-wrap {
   position: relative;
   width: 800px;
   height: 600px;

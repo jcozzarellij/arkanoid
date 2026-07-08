@@ -3,13 +3,16 @@ const ctx = canvas.getContext( '2d' );
 
 const overlayVictory = document.getElementById( 'overlay-victory' );
 const overlayGameover = document.getElementById( 'overlay-gameover' );
+const hudScoreEl = document.getElementById( 'hud-score' );
+const hudLivesEl = document.getElementById( 'hud-lives' );
 
 const COLS = 10;
 const ROWS = 6;
 const BLOCK_WIDTH = 80;
 const BLOCK_HEIGHT = 30;
-const BLOCK_TOP_OFFSET = 40;
+const BLOCK_TOP_OFFSET = 0;
 const COLORS = [ 'gray', 'red', 'yellow', 'cyan', 'magenta', 'hotpink', 'green' ];
+const MAX_LIVES = 3;
 
 const PADDLE_KEY_SPEED = 8;
 const BALL_REST_GAP = 14; // distancia entre el centro de la bola y el borde superior de la pala en reposo
@@ -64,6 +67,7 @@ function resetGame() {
   state = createInitialState();
   overlayVictory.classList.add( 'hidden' );
   overlayGameover.classList.add( 'hidden' );
+  updateHud();
 }
 
 function launchBall() {
@@ -201,11 +205,25 @@ function updateBall() {
 function update() {
   updatePaddle();
   updateBall();
+  updateHud();
 
   if ( state.screen === 'gameover' ) {
     overlayGameover.classList.remove( 'hidden' );
   } else if ( state.screen === 'victory' ) {
     overlayVictory.classList.remove( 'hidden' );
+  }
+}
+
+function updateHud() {
+  hudScoreEl.textContent = `Score: ${ state.score }`;
+
+  hudLivesEl.innerHTML = '';
+  for ( let i = 0; i < MAX_LIVES; i++ ) {
+    const heart = document.createElement( 'span' );
+    const filled = i < state.lives;
+    heart.className = filled ? 'heart' : 'heart empty';
+    heart.textContent = filled ? '❤' : '♡';
+    hudLivesEl.appendChild( heart );
   }
 }
 
@@ -225,22 +243,11 @@ function drawBall() {
   drawSprite( ctx, 'ball', ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2 );
 }
 
-function drawHud() {
-  ctx.fillStyle = '#fff';
-  ctx.font = '20px sans-serif';
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'left';
-  ctx.fillText( `Score: ${ state.score }`, 10, 10 );
-  ctx.textAlign = 'right';
-  ctx.fillText( `Lives: ${ state.lives }`, canvas.width - 10, 10 );
-}
-
 function render() {
   ctx.clearRect( 0, 0, canvas.width, canvas.height );
   drawBlocks();
   drawPaddle();
   drawBall();
-  drawHud();
 }
 
 function loop() {

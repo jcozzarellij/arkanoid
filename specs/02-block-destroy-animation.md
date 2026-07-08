@@ -1,6 +1,6 @@
 # SPEC 02 — Animación de explosión al destruir bloques
 
-> **Status:** aprobado
+> **Status:** Implementado
 > **Depends on:** SPEC 01
 > **Date:** 2026-07-07
 > **Objective:** Al romper un bloque, reproducir la animación de explosión de 4 frames del spritesheet en su lugar (con el color del bloque) antes de que el "Victoria" pueda dispararse.
